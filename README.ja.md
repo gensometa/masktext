@@ -46,7 +46,7 @@ masktext --check -f app.log --stats
 [公開リポジトリ](https://github.com/gensometa/masktext)のリリースをワンライナーで導入できます。
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/gensometa/masktext/v0.1.0/install.sh | sh -s -- gensometa/masktext v0.1.0
+curl -fsSL https://raw.githubusercontent.com/gensometa/masktext/v0.2.0/install.sh | sh -s -- gensometa/masktext v0.2.0
 ```
 
 Linux/macOSのamd64/arm64を自動判定し、SHA-256を照合して`~/.local/bin`に
@@ -67,6 +67,13 @@ go build -trimpath -o masktext ./cmd/masktext
 標準ではメールアドレス、IPv4/IPv6、一般的なキー名に続くパスワード・APIキー等、
 一部のGitHub/AWS/OpenAI形式/Slackトークン、JWT形式、Bearer認証、PEM秘密鍵、
 URL内の認証情報、Luhnチェックを通る13〜19桁のカード番号形式を置換します。
+さらにDiscord Webhook URL全体、`ユーザー名@ホスト名`、シェルの作業ディレクトリ、
+`/root`・`/home/ユーザー`・`/Users/ユーザー`・`~/`配下のパスも対象にします。
+シェル形式の変数代入は名前を問わず値を置換し、コメント内・引用符内・バッククォート・
+`$(...)`も対象です。`PORT=8080`のような機密ではない値も置換します。
+代入の外にある通常の公開URLは保持します。シェル全体を厳密に解釈するものではなく、
+ヒアドキュメントや特殊な構文には目視確認が必要です。文中の単独のユーザー名・
+ホスト名からの推測は行いません。
 電話番号はIDとの誤判定があるため`--phone`で有効にします。
 
 任意の秘密を完全に検出することはできません。氏名・住所・生年月日・個人番号・
@@ -110,6 +117,6 @@ masktext -f notes.txt --config rules.json
 
 公開手順・全オプションは[README.md](README.md)、安全性の詳細は
 [SECURITY.md](SECURITY.md)をご覧ください。
-GitHub上でタグ`v0.1.0`をpushすると、付属のワークフローが4環境向けの配布物と
+GitHub上でタグ`v0.2.0`をpushすると、付属のワークフローが4環境向けの配布物と
 チェックサムを作成しリリースを公開します。リリース後は公開された配布物を使って導入を確認してください。
 コマンド名は仮称で、既存名称・商標の調査はまだ行っていません。

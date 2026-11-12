@@ -55,6 +55,12 @@ func New(c Config, phone bool) (*Engine, error) {
 		e.detectors = append(e.detectors, detector{name, regexp.MustCompile(pattern), group, valid})
 	}
 	add("PRIVATE_KEY", `(?s)-----BEGIN ((?:RSA |EC |DSA |OPENSSH |ENCRYPTED )?PRIVATE KEY)-----.*?-----END (?:RSA |EC |DSA |OPENSSH |ENCRYPTED )?PRIVATE KEY-----`, 0, nil)
+	add("WEBHOOK", `(?i)https://(?:(?:canary|ptb)\.)?(?:discord\.com|discordapp\.com)/api(?:/v[0-9]+)?/webhooks/[^\s\x22\x27`+"`"+`<>]+`, 0, nil)
+	const account = `(?m)(?:^|[ \t(])([a-zA-Z_][a-zA-Z0-9_.-]*)@([a-zA-Z0-9_][a-zA-Z0-9_.-]*)`
+	add("USER", account, 1, nil)
+	add("HOST", account, 2, nil)
+	add("PATH", `(?m)^[ \t]*[a-zA-Z_][a-zA-Z0-9_.-]*@[a-zA-Z0-9_.-]+:((?:~|/)[^\r\n]*?)[#$%>]`, 1, nil)
+	add("PATH", `(?:/root|/home/[^/\s\x22\x27`+"`"+`<>;|&)]+|/Users/[^/\s\x22\x27`+"`"+`<>;|&)]+|~)(?:/[^\s\x22\x27`+"`"+`<>;|&)#]*)+`, 0, nil)
 	add("TOKEN", `\b(?:gh[pousr]_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{20,}|AKIA[A-Z0-9]{16}|ASIA[A-Z0-9]{16}|sk-(?:proj-)?[A-Za-z0-9_-]{20,}|xox[baprs]-[A-Za-z0-9-]{10,})\b`, 0, nil)
 	add("JWT", `\beyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\b`, 0, nil)
 	add("SECRET", `(?i)(?:["']?(?:password|passwd|pwd|secret|client_secret|api[_-]?key|access[_-]?token|refresh[_-]?token|authorization)["']?[ \t]*[:=][ \t]*)(?:"((?:\\.|[^"\\\r\n])+)"|'((?:\\.|[^'\\\r\n])+)'|((?:(?:Bearer|Basic)[ \t]+)?[^\s,;\x22\x27}\]]+))`, -1, nil)
@@ -127,7 +133,10 @@ func luhn(s string) bool {
 }
 
 func (e *Engine) Mask(s string) Result {
-	var spans []span
+	spans := shellAssignments(s)
+	for i := range spans {
+		spans[i].priority = len(e.detectors)
+	}
 	for priority, d := range e.detectors {
 		for _, m := range d.re.FindAllStringSubmatchIndex(s, -1) {
 			g := d.group

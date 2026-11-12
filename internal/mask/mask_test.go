@@ -14,7 +14,7 @@ func TestMask(t *testing.T) {
 		{"email", "連絡先: alice@example.com", "連絡先: [REDACTED_EMAIL]"},
 		{"ip", "192.168.0.1 ::1 2001:db8::1 999.1.1.1", "[REDACTED_IP] [REDACTED_IP] [REDACTED_IP] 999.1.1.1"},
 		{"json", `{"password": "secret value", "n": 42}`, `{"password": "[REDACTED_SECRET]", "n": 42}`},
-		{"env", "API_KEY=demo-secret\r\nPORT=8080\r\n", "API_KEY=[REDACTED_SECRET]\r\nPORT=8080\r\n"},
+		{"env", "API_KEY=demo-secret\r\nPORT=8080\r\n", "API_KEY=[REDACTED_SECRET]\r\nPORT=[REDACTED_VARIABLE]\r\n"},
 		{"bearer", "Authorization: Bearer abcdef123456", "Authorization: [REDACTED_SECRET]"},
 		{"basic", "Authorization: Basic YWxhZGRpbjpvcGVuc2VzYW1l", "Authorization: [REDACTED_SECRET]"},
 		{"escaped JSON", `{"password":"a\"hidden suffix"}`, `{"password":"[REDACTED_SECRET]"}`},
@@ -72,6 +72,7 @@ func TestPhoneOptIn(t *testing.T) {
 func FuzzMask(f *testing.F) {
 	e, _ := New(Config{}, false)
 	f.Add("password=demo alice@example.com")
+	f.Add("NAME=\"$(cat 'private file')\"\nadmin@host:~/project# echo ok")
 	f.Fuzz(func(t *testing.T, s string) {
 		r := e.Mask(s)
 		if len(r.Counts) == 0 && r.Text != s {

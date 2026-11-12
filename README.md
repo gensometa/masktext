@@ -21,7 +21,7 @@ masktext --check -f app.log --stats     # exit 1 on findings; counts only
 Install the pinned release from [gensometa/masktext](https://github.com/gensometa/masktext):
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/gensometa/masktext/v0.1.0/install.sh | sh -s -- gensometa/masktext v0.1.0
+curl -fsSL https://raw.githubusercontent.com/gensometa/masktext/v0.2.0/install.sh | sh -s -- gensometa/masktext v0.2.0
 ```
 
 The installer downloads a platform-specific binary, verifies its SHA-256 checksum,
@@ -90,6 +90,9 @@ redaction spans rather than every overlapping detector match. Clean input emits 
 | --- | --- |
 | Email | Common ASCII email addresses |
 | IP | Valid IPv4 and common IPv6 forms, including loopback/private addresses |
+| Shell variables | All shell-style assignment values, including commented assignments, quotes and command substitutions |
+| Shell identity and paths | `user@host`, shell prompt working directories, paths under `/root`, `/home/USER`, `/Users/USER` and `~/` |
+| Discord Webhooks | Full Discord webhook URLs, including query strings |
 | Credential values | Common `password`, `secret`, `api_key`, token and authorization assignments in JSON, env and log text |
 | Tokens | Selected GitHub, AWS access-key ID, OpenAI-style and Slack token patterns; JWT-like strings; Bearer values |
 | Private keys | PEM blocks labeled PRIVATE KEY, RSA/EC/DSA/OPENSSH/ENCRYPTED PRIVATE KEY |
@@ -105,10 +108,15 @@ Masked output is not intended to be repeatedly scanned for a clean check result;
 credential assignments still have sensitive-looking keys after redaction.
 
 **Detection is heuristic. Review before sharing.** Arbitrary API keys without a
-known prefix or nearby credential label are not reliably detected. Names,
+known prefix, nearby credential label or shell assignment are not reliably detected. Names,
 addresses, birthdays, national IDs, business-specific secrets, Unicode/obfuscated
 emails, encoded/escaped values and uncommon or multiline configuration forms
-require custom rules or manual review. Phone detection is opt-in because it can
+require custom rules or manual review. Shell assignments mask even nonsecret values
+(such as ports); comment markers do not disable detection. Shell parsing is a
+conservative text scanner, not a full Bash parser; heredocs and unusual syntax
+need manual review. Ordinary public URLs outside assignments remain unchanged.
+User and host detection requires a `user@host` context; standalone names are not
+automatically inferred from prose. Phone detection is opt-in because it can
 confuse IDs and other numbers with phones. No statistical/LLM detection is used.
 
 UTF-8 text only, at most 32 MiB per invocation. NUL-containing/binary input and
@@ -156,7 +164,7 @@ backups or logs. See [SECURITY.md](SECURITY.md).
 3. Create a public GitHub repository and push this source. Enable Actions and
    private vulnerability reporting. Keep real samples and rule files out of Git.
 4. Run `go test -race ./...` and `go vet ./...` and let Linux/macOS CI pass.
-5. Push tag `v0.1.0`. The release workflow tests the code, builds four archives,
+5. Push tag `v0.2.0`. The release workflow tests the code, builds four archives,
    produces `SHA256SUMS`, and publishes a GitHub Release.
 6. Test the pinned install command on Linux and macOS. Tag each subsequent release;
    keep CLI changes backward compatible and document detector behavior changes.
