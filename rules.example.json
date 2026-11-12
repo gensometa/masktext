@@ -1,0 +1,7 @@
+{
+  "rules": [
+    { "name": "PERSON", "literal": "山田太郎" },
+    { "name": "PROJECT", "literal": "社外秘プロジェクト" },
+    { "name": "EMPLOYEE_ID", "pattern": "EMP-[0-9]{6}" }
+  ]
+}

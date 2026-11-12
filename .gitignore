@@ -1,0 +1,7 @@
+/masktext
+/dist/
+/coverage.out
+.DS_Store
+*.masked.*
+.masktext-*
+__pycache__/
